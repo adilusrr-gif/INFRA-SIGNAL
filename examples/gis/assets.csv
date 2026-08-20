@@ -1,0 +1,4 @@
+external_id,name,asset_type,latitude,longitude,commissioned_year,district,criticality,state,property.diameter_mm,property.material
+WM-AST-042,Магистральный водопровод №42,water_main,51.1280,71.4310,1987,Алматы,86,normal,500,steel
+HT-AST-017,Тепловой контур №17,heating_main,51.1342,71.4428,2004,Байқоңыр,76,normal,300,PIR
+ES-AST-009,Распределительная подстанция №9,electric_substation,51.1410,71.4200,2011,Сарыарқа,82,normal,,

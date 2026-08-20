@@ -1,0 +1,23 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [71.431, 51.128]
+      },
+      "properties": {
+        "external_id": "WM-AST-042",
+        "name": "Магистральный водопровод №42",
+        "asset_type": "water_main",
+        "commissioned_year": 1987,
+        "district": "Алматы",
+        "criticality": 86,
+        "state": "normal",
+        "diameter_mm": 500,
+        "material": "steel"
+      }
+    }
+  ]
+}

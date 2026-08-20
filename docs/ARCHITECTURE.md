@@ -5,6 +5,7 @@
 ```mermaid
 flowchart TD
     S["SCADA / IoT telemetry"] --> A["Deterministic anomaly detector"]
+    G["GIS asset registry"] --> C
     R["109 / web / e-Өтініш"] --> L["RU/KZ report analysis"]
     A --> C["Time + geo + asset correlation"]
     L --> C
@@ -23,9 +24,10 @@ flowchart TD
 | Correlator | Time, distance, compatible asset and evidence merging | Unmatched reports enter the manual-link timeline |
 | Risk engine | Explicit weighted score and severity threshold | Inputs remain visible in evidence metadata |
 | Playbook retrieval | Local lexical retrieval and cited actions | Bundled demo sections remain available offline |
+| GIS import adapter | Validates and upserts CSV/GeoJSON asset registries | Dry-run by default; any invalid row rejects the whole file |
 | Callcentrai adapter | Optional local speech-to-text boundary | Returns 503/502; text ingestion still works |
 | KENCE adapter | Optional question to a pre-authorised document session | Returns 503/502; local playbooks still work |
-| Dispatcher UI | Map, telemetry, evidence, recommendation and approval | Read-only until an explicit operator action |
+| Dispatcher UI | Nine navigable modules, map, telemetry, GIS import, evidence, recommendation and approval | Operational mutations remain behind explicit operator actions |
 
 ## Decision boundary
 
@@ -46,6 +48,7 @@ contracts do not require the UI to change.
 - Services run as non-root users in read-only containers.
 - The API binds to loopback in the default Compose file.
 - Audio is limited to 20 MB and only sent to a configured Callcentrai endpoint.
+- GIS imports are limited to 5 MB and 5,000 assets and require administrator RBAC in production.
 - CORS is allow-listed; operational actions require a human gate in the UI.
 - Tokens stay in environment variables and are never returned by health routes.
 - Production requires identity/RBAC, TLS, rate limiting, audit retention,

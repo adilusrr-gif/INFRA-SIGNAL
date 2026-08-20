@@ -3,11 +3,19 @@ import type { InfrastructureAsset, TelemetrySample } from "../types";
 interface TelemetryChartProps {
   asset?: InfrastructureAsset;
   telemetry: TelemetrySample[];
+  metric?: string;
 }
 
-export function TelemetryChart({ asset, telemetry }: TelemetryChartProps) {
+const metricLabels: Record<string, string> = {
+  pressure: "Давление",
+  temperature: "Температура",
+  flow: "Расход",
+  voltage: "Напряжение",
+};
+
+export function TelemetryChart({ asset, telemetry, metric = "pressure" }: TelemetryChartProps) {
   const points = telemetry
-    .filter((item) => item.asset_id === asset?.id && item.metric === "pressure")
+    .filter((item) => item.asset_id === asset?.id && item.metric === metric)
     .sort((a, b) => Date.parse(a.captured_at) - Date.parse(b.captured_at))
     .slice(-24);
 
@@ -34,16 +42,18 @@ export function TelemetryChart({ asset, telemetry }: TelemetryChartProps) {
   const y = (value: number) =>
     padding.y + ((max - value) / Math.max(0.01, max - min)) * (height - padding.y * 2);
   const line = points.map((point, index) => `${x(index)},${y(point.value)}`).join(" ");
+  const last = points.at(-1);
+  const delta = baseline === 0 ? 0 : (((last?.value ?? baseline) - baseline) / baseline) * 100;
 
   return (
     <div className="telemetry-chart">
       <div className="chart-heading">
         <div>
-          <span>Давление · последние {points.length} измерений</span>
-          <strong>{points.at(-1)?.value.toFixed(2)} bar</strong>
+          <span>{metricLabels[metric] ?? metric} · последние {points.length} измерений</span>
+          <strong>{last?.value.toFixed(2)} {last?.unit}</strong>
         </div>
         <div className="chart-delta">
-          {(((points.at(-1)?.value ?? baseline) - baseline) / baseline * 100).toFixed(1)}%
+          {delta.toFixed(1)}%
         </div>
       </div>
       <svg viewBox={`0 0 ${width} ${height}`} aria-label="График давления">

@@ -127,3 +127,36 @@ export interface DashboardData {
   timeline: TimelineEvent[];
   ai: AiStatus;
 }
+
+export interface HealthStatus {
+  status: string;
+  service: string;
+  deterministic_core: boolean;
+  ollama: AiStatus;
+  integrations: Record<
+    string,
+    {
+      configured: boolean;
+      formats?: string[];
+    }
+  >;
+}
+
+export interface GisImportIssue {
+  row: string;
+  field: string;
+  message: string;
+}
+
+export interface GisImportResult {
+  valid: boolean;
+  source_format: "csv" | "geojson";
+  source_filename: string;
+  dry_run: boolean;
+  received: number;
+  created: number;
+  updated: number;
+  unchanged: number;
+  applied: boolean;
+  sample: InfrastructureAsset[];
+}

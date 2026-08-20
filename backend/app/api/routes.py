@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import asdict
 
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 
@@ -15,6 +16,7 @@ from app.api.schemas import (
 from app.core.models import CitizenReport, ReportChannel, TelemetrySample, to_dict, utcnow
 from app.services.callcenter_adapter import CallcenterVoiceAdapter, VoiceAdapterUnavailable
 from app.services.engine import IncidentIntelligenceService
+from app.services.gis_import import GisImportValidationError, import_gis_assets
 from app.services.kence_adapter import KenceAdapterUnavailable, KenceGuidanceAdapter
 from app.services.simulation import reset_demo, run_water_leak_scenario
 
@@ -34,6 +36,10 @@ def build_router(service: IncidentIntelligenceService) -> APIRouter:
             "ollama": to_dict(ai),
             "integrations": {
                 "callcentrai": {"configured": voice_adapter.configured},
+                "gis_import": {
+                    "configured": True,
+                    "formats": ["csv", "geojson"],
+                },
                 "kence": {"configured": kence_adapter.configured},
             },
         }
@@ -49,6 +55,34 @@ def build_router(service: IncidentIntelligenceService) -> APIRouter:
     @router.post("/demo/water-leak")
     def demo_water_leak() -> dict:
         return run_water_leak_scenario(service)
+
+    @router.post("/integrations/gis/import")
+    async def import_gis_registry(
+        file: UploadFile = File(...),
+        dry_run: bool = Form(default=True),
+    ) -> dict:
+        content = await file.read(5 * 1024 * 1024 + 1)
+        if not content:
+            raise HTTPException(status_code=400, detail="GIS file is empty")
+        if len(content) > 5 * 1024 * 1024:
+            raise HTTPException(status_code=413, detail="GIS file must not exceed 5 MB")
+        try:
+            result = import_gis_assets(
+                content=content,
+                filename=file.filename or "assets",
+                content_type=file.content_type,
+                store=service.store,
+                dry_run=dry_run,
+            )
+        except GisImportValidationError as exc:
+            raise HTTPException(
+                status_code=422,
+                detail={
+                    "message": "GIS import validation failed; no changes were applied",
+                    "issues": [asdict(issue) for issue in exc.issues[:100]],
+                },
+            ) from exc
+        return asdict(result)
 
     @router.post("/telemetry")
     def ingest_telemetry(payload: TelemetryIn) -> dict:

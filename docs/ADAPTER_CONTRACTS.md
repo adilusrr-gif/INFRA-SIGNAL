@@ -37,6 +37,42 @@ repository milestone.
 }
 ```
 
+## GIS asset registry
+
+`POST /api/v1/integrations/gis/import` accepts a multipart `file` containing
+CSV or GeoJSON and an optional `dry_run` form field. Dry-run is enabled by
+default and validates the complete file without modifying the asset registry.
+
+Required asset fields are `external_id`, `name`, `asset_type`, `latitude`,
+`longitude`, `commissioned_year` and `district`. Optional fields are
+`criticality` (default `50`) and `state` (default `normal`). Supported asset
+types are `water_main`, `heating_main`, `electric_substation` and
+`sewer_collector`.
+
+For CSV, additional columns prefixed with `property.` are retained as asset
+metadata. For GeoJSON, each item must be a Point feature; coordinates supply
+longitude and latitude, while all fields above are read from `properties`.
+Unknown GeoJSON properties are retained as metadata.
+
+```bash
+# Validate only
+curl -X POST http://localhost:8080/api/v1/integrations/gis/import \
+  -F "file=@examples/gis/assets.csv" \
+  -F "dry_run=true"
+
+# Apply after a successful validation
+curl -X POST http://localhost:8080/api/v1/integrations/gis/import \
+  -F "file=@examples/gis/assets.csv" \
+  -F "dry_run=false"
+```
+
+The import is atomic: one invalid row rejects the entire file. Applying a valid
+file creates or updates assets by utility-owned `external_id` and preserves the
+internal ID of an existing asset. Replaying an unchanged file is idempotent.
+The API limits each request to 5 MB and 5,000 assets. Production deployment must
+restrict this endpoint to authorised registry administrators and record the
+operator identity in a durable audit log.
+
 ## Callcentrai
 
 The proposed boundary is `POST {CALLCENTER_BASE_URL}/api/v1/transcribe` with a
@@ -76,5 +112,6 @@ deterministic incident score or trigger an action.
 
 ## Operational status
 
-`GET /api/v1/health` reports whether Callcentrai and KENCE are configured, but
-never returns URLs, tokens or session identifiers.
+`GET /api/v1/health` reports whether Callcentrai and KENCE are configured and
+lists the locally available GIS import formats, but never returns URLs, tokens
+or session identifiers.

@@ -27,8 +27,11 @@ and Kazakh reports. The system:
 - RU/KZ report classification with an optional local Ollama enhancement.
 - Cross-source incident correlation and explainable risk scoring.
 - Local playbook retrieval with source citations.
+- Atomic GIS asset import from CSV or GeoJSON with dry-run validation.
 - Optional, isolated adapters for Callcentrai transcription and a KENCE document session.
-- Standalone FastAPI API and React dispatcher UI.
+- Standalone FastAPI API and a responsive React dispatcher workspace.
+- Nine clickable operator modules: incidents, map, telemetry, sources, asset
+  registry, integrations, audit and persistent day/night settings.
 - Reproducible leak demo and standard-library unit tests.
 
 ## Run the verified core
@@ -48,6 +51,25 @@ docker compose up --build
 
 Open <http://localhost:8088>. API documentation is available at
 <http://localhost:8080/docs>.
+
+The sidebar, KPI cards, source badges, notifications and operator menu navigate
+to working modules. The sun/moon control switches theme immediately; theme,
+language, refresh and density preferences are stored locally in the browser.
+
+## Import a GIS asset registry
+
+Validate a CSV or GeoJSON file without changing the registry:
+
+```bash
+curl -X POST http://localhost:8080/api/v1/integrations/gis/import \
+  -F "file=@examples/gis/assets.geojson" \
+  -F "dry_run=true"
+```
+
+If the response has `valid: true`, repeat the request with `dry_run=false` to
+apply the import. Example files are available in [`examples/gis`](examples/gis),
+and the complete field contract is documented in
+[`docs/ADAPTER_CONTRACTS.md`](docs/ADAPTER_CONTRACTS.md#gis-asset-registry).
 
 ## Repository layout
 

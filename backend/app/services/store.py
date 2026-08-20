@@ -36,6 +36,33 @@ class InMemoryStore:
             self.assets[asset.id] = asset
         return asset
 
+    def list_assets(self) -> list[InfrastructureAsset]:
+        with self._lock:
+            return list(self.assets.values())
+
+    def upsert_asset(self, asset: InfrastructureAsset) -> str:
+        """Insert or replace an asset by its utility-owned external identifier."""
+
+        with self._lock:
+            existing = next(
+                (item for item in self.assets.values() if item.external_id == asset.external_id),
+                None,
+            )
+            if existing is None:
+                self.assets[asset.id] = asset
+                return "created"
+            asset.id = existing.id
+            if existing == asset:
+                return "unchanged"
+            self.assets[existing.id] = asset
+            return "updated"
+
+    def upsert_assets(self, assets: list[InfrastructureAsset]) -> list[str]:
+        """Apply a registry batch while readers see either side of the update."""
+
+        with self._lock:
+            return [self.upsert_asset(asset) for asset in assets]
+
     def add_crew(self, crew: Crew) -> Crew:
         with self._lock:
             self.crews[crew.id] = crew

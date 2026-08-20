@@ -8,6 +8,9 @@ htmlcov/
 node_modules/
 dist/
 .vite/
+*.tsbuildinfo
+frontend/vite.config.js
+frontend/vite.config.d.ts
 /data/
 *.sqlite3
 *.db
